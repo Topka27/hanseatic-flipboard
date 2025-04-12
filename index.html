@@ -20,6 +20,12 @@
       flex-wrap: wrap;
       gap: 6px;
     }
+    .line.align-right {
+      justify-content: flex-end;
+    }
+    .line.align-left {
+      justify-content: flex-start;
+    }
     .cell {
       position: relative;
       width: 52px;
@@ -62,11 +68,11 @@
   </style>
 </head>
 <body>
-  <div class="line" id="dateLine"></div>
-  <div class="line" id="timeLine"></div>
+  <div class="line align-right" id="dateLine"></div>
+  <div class="line align-right" id="timeLine"></div>
   <div class="line"><div class="cell empty"><div class="flap-inner"> </div></div></div>
-  <div class="line" id="hanseaticLine"></div>
-  <div class="line" id="wordLine"></div>
+  <div class="line align-left" id="hanseaticLine"></div>
+  <div class="line align-left" id="wordLine"></div>
   <script>
     const allChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 ";
     const digits = "0123456789";
