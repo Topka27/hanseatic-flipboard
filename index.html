@@ -23,9 +23,6 @@
     .line.align-right {
       justify-content: flex-end;
     }
-    .line.align-left {
-      justify-content: flex-start;
-    }
     .cell {
       position: relative;
       width: 52px;
@@ -35,14 +32,14 @@
     .flap-inner {
       width: 100%;
       height: 100%;
-      background-color: #2B2B2B;
+      background-color: #5b5852;
       color: #E9DEC8;
       font-size: 56px;
       font-family: 'Lulo Clean', sans-serif;
       text-align: center;
       line-height: 68px;
       border-radius: 6px;
-      border: 1px solid #2B2B2B;
+      border: 1px solid #5b5852;
       padding-top: 3px;
       padding-bottom: 3px;
       transform-style: preserve-3d;
@@ -68,11 +65,11 @@
   </style>
 </head>
 <body>
-  <div class="line align-right" id="dateLine"></div>
-  <div class="line align-right" id="timeLine"></div>
+  <div class="line" id="dateLine"></div>
+  <div class="line" id="timeLine"></div>
   <div class="line"><div class="cell empty"><div class="flap-inner"> </div></div></div>
-  <div class="line align-left" id="hanseaticLine"></div>
-  <div class="line align-left" id="wordLine"></div>
+  <div class="line align-right" id="hanseaticLine"></div>
+  <div class="line align-right" id="wordLine"></div>
   <script>
     const allChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 ";
     const digits = "0123456789";
