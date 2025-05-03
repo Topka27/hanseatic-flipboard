@@ -1,57 +1,46 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hanseatic Flipboard</title>
+  <meta charset="UTF-8">
+  <title>Hanseatic Flipboard Terminal</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Lulo+Clean:wght@700&display=swap');
-
-    * {
-      box-sizing: border-box;
-    }
 
     html, body {
       margin: 0;
       padding: 0;
-      background-color: #E5007D;
-      color: #5B5852;
+      background: transparent;
       font-family: 'Lulo Clean', sans-serif;
-      width: 100%;
-      height: 100%;
+      color: #5B5852;
       display: flex;
+      flex-direction: column;
+      align-items: flex-start;
       justify-content: center;
-    }
-
-    .wrapper {
-      width: 100%;
-      max-width: 1400px;
-      padding: 40px 5vw;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      grid-template-rows: auto auto 40px auto auto;
-      gap: 10px;
+      gap: 2vh;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
     }
 
     .line {
       display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
+      flex-wrap: nowrap;
+      gap: 0.5vw;
+      white-space: nowrap;
+      width: 100%;
     }
 
-    .align-left {
-      justify-content: flex-start;
-    }
-
-    .align-right {
+    .line.align-right {
       justify-content: flex-end;
     }
 
     .cell {
       position: relative;
-      width: min(10vw, 52px);
-      height: min(14vw, 68px);
+      width: 4vw;
+      height: 5.5vw;
       perspective: 1000px;
+      min-width: 28px;
+      min-height: 38px;
     }
 
     .flap-inner {
@@ -59,20 +48,19 @@
       height: 100%;
       background-color: #E9DEC8;
       color: #5B5852;
-      font-size: clamp(18px, 5vw, 56px);
+      font-size: 3.8vw;
+      line-height: 5.5vw;
+      font-family: 'Lulo Clean', sans-serif;
       text-align: center;
-      line-height: 1;
       border-radius: 6px;
       border: 1px solid #E9DEC8;
-      padding-top: 8px;
-      padding-bottom: 8px;
-      box-shadow: inset 0 -1px 2px rgba(0, 0, 0, 0.15);
       transform-style: preserve-3d;
       backface-visibility: hidden;
       transition: transform 0.2s ease-in-out;
+      box-shadow: inset 0 -1px 2px rgba(0, 0, 0, 0.15);
     }
 
-    .empty .flap-inner {
+    .cell.empty .flap-inner {
       background-color: transparent;
       border: none;
       box-shadow: none;
@@ -91,37 +79,38 @@
       box-shadow: 0 0 6px rgba(91, 88, 82, 0.2);
     }
 
-    @media (max-width: 768px) {
-      .wrapper {
-        grid-template-columns: 1fr;
-        grid-template-rows: auto auto 40px auto auto;
-        text-align: center;
-        justify-items: center;
+    @media (max-width: 500px) {
+      .cell {
+        width: 6vw;
+        height: 7.5vw;
       }
-
-      .align-left, .align-right {
-        justify-content: center;
+      .flap-inner {
+        font-size: 5.2vw;
+        line-height: 7.5vw;
+      }
+      .line {
+        gap: 1vw;
       }
     }
   </style>
 </head>
 <body>
-  <div class="wrapper">
-    <div class="line align-right" id="dateLine"></div>
-    <div class="line align-right" id="timeLine"></div>
-    <div></div>
-    <div class="line align-left" id="hanseaticLine"></div>
-    <div class="line align-left" id="wordLine"></div>
-  </div>
+  <div class="line align-right" id="dateLine"></div>
+  <div class="line align-right" id="timeLine"></div>
+  <div class="line"><div class="cell empty"><div class="flap-inner"> </div></div></div>
+  <div class="line" id="hanseaticLine"></div>
+  <div class="line" id="wordLine"></div>
 
   <script>
     const allChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 ";
+    const digits = "0123456789";
     const dateLine = document.getElementById("dateLine");
     const timeLine = document.getElementById("timeLine");
-    const hanseaticLine = document.getElementById("hanseaticLine");
     const wordLine = document.getElementById("wordLine");
+    const hanseaticLine = document.getElementById("hanseaticLine");
 
     const words = ["Events", "Partys", "Activations", "Connections", "Precision", "Memories", "Highlights", "Design", "Happiness"];
+
     const FLAP_DURATION = 2000;
     const FLAP_FAST = 400;
     const HOLD_DURATION = 3000;
@@ -145,15 +134,19 @@
       void inner.offsetWidth;
       inner.textContent = charList[step];
       if (!instant) inner.classList.add("flipping");
-      setTimeout(() => flipCharacter(cell, charList, step + 1, instant, flapDuration), flapDuration / charList.length);
+      setTimeout(() => {
+        flipCharacter(cell, charList, step + 1, instant, flapDuration);
+      }, flapDuration / charList.length);
     }
 
     function cycleCharacters(cell, targetChar, instant = false, flapDuration = FLAP_DURATION, stepList = null, delay = 0) {
       const steps = stepList || [targetChar];
-      setTimeout(() => flipCharacter(cell, steps, 0, instant, flapDuration), delay);
+      setTimeout(() => {
+        flipCharacter(cell, steps, 0, instant, flapDuration);
+      }, delay);
     }
 
-    function updateLineSmart(container, text, lastText, instantCharIndices = [], fastAnimIndices = [], staggered = false) {
+    function updateLineSmart(container, text, lastText, instantCharIndices = [], fastAnimIndices = [], staggered = false, forceDigits = []) {
       const newChars = text.split("");
       while (container.children.length < newChars.length) {
         container.appendChild(createCell(" "));
@@ -172,14 +165,19 @@
         } else {
           inner.textContent = char;
         }
-        cell.classList.toggle("empty", char === " ");
+        if (char === " ") {
+          cell.classList.add("empty");
+        } else {
+          cell.classList.remove("empty");
+        }
       });
     }
 
     let lastDateStr = "", lastTimeStr = [], lastWordStr = [];
+
     function updateDateTime() {
       const now = new Date();
-      const dateStr = `${String(now.getDate()).padStart(2, '0')}.${String(now.getMonth()+1).padStart(2, '0')}.${now.getFullYear()}`;
+      const dateStr = `${String(now.getDate()).padStart(2, '0')}.${String(now.getMonth() + 1).toString().padStart(2, '0')}.${now.getFullYear()}`;
       const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
       if (dateStr !== lastDateStr) {
         updateLineSmart(dateLine, dateStr, lastDateStr.split(""));
