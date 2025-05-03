@@ -14,9 +14,9 @@
     html, body {
       margin: 0;
       padding: 0;
+      background: transparent;
       width: 100%;
       height: 100%;
-      background: transparent;
       font-family: 'Lulo Clean', sans-serif;
       display: flex;
       justify-content: center;
@@ -24,33 +24,30 @@
     }
 
     .wrapper {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      padding: 40px;
+      width: 100%;
+      max-width: 1200px;
+    }
+
+    .column {
       display: flex;
       flex-direction: column;
-      gap: 20px;
-      padding: 20px;
-      max-width: 100%;
-      width: fit-content;
+      gap: 12px;
     }
 
     .line {
       display: flex;
       flex-wrap: wrap;
       gap: 6px;
-      width: 100%;
-    }
-
-    .line.align-right {
-      justify-content: flex-end;
-    }
-
-    .line.align-left {
-      justify-content: flex-start;
     }
 
     .cell {
       position: relative;
-      width: min(12vw, 52px);
-      height: min(16vw, 68px);
+      width: min(9vw, 52px);
+      height: min(11vw, 68px);
       perspective: 1000px;
     }
 
@@ -59,18 +56,19 @@
       height: 100%;
       background-color: #E9DEC8;
       color: #5B5852;
-      font-size: clamp(16px, 5vw, 56px);
-      font-family: 'Lulo Clean', sans-serif;
+      font-size: clamp(18px, 6vw, 56px);
       text-align: center;
       line-height: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
       border-radius: 6px;
       border: 1px solid #E9DEC8;
-      padding-top: 12%;
-      padding-bottom: 12%;
       transform-style: preserve-3d;
       backface-visibility: hidden;
       transition: transform 0.2s ease-in-out;
       box-shadow: inset 0 -1px 2px rgba(0, 0, 0, 0.15);
+      padding: 4px;
     }
 
     .cell.empty .flap-inner {
@@ -91,30 +89,39 @@
     .hoverable:hover {
       box-shadow: 0 0 6px rgba(91, 88, 82, 0.2);
     }
+
+    @media (max-width: 768px) {
+      .wrapper {
+        grid-template-columns: 1fr;
+        text-align: center;
+        place-items: center;
+      }
+    }
   </style>
 </head>
 <body>
   <div class="wrapper">
-    <div class="line align-right" id="dateLine"></div>
-    <div class="line align-right" id="timeLine"></div>
-    <div class="line align-left" id="hanseaticLine"></div>
-    <div class="line align-left" id="wordLine"></div>
+    <div class="column">
+      <div class="line" id="hanseaticLine"></div>
+      <div class="line" id="wordLine"></div>
+    </div>
+    <div class="column" style="align-items: flex-end;">
+      <div class="line" id="dateLine"></div>
+      <div class="line" id="timeLine"></div>
+    </div>
   </div>
 
   <script>
-    const allChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 ";
-    const digits = "0123456789";
-    const dateLine = document.getElementById("dateLine");
-    const timeLine = document.getElementById("timeLine");
-    const wordLine = document.getElementById("wordLine");
-    const hanseaticLine = document.getElementById("hanseaticLine");
-
     const words = ["Events", "Partys", "Activations", "Connections", "Precision", "Memories", "Highlights", "Design", "Happiness"];
-
     const FLAP_DURATION = 2000;
     const FLAP_FAST = 400;
     const HOLD_DURATION = 3000;
     const STAGGER_DELAY = 70;
+
+    const hanseaticLine = document.getElementById("hanseaticLine");
+    const wordLine = document.getElementById("wordLine");
+    const dateLine = document.getElementById("dateLine");
+    const timeLine = document.getElementById("timeLine");
 
     function createCell(char) {
       const cell = document.createElement("div");
@@ -127,26 +134,22 @@
       return cell;
     }
 
-    function flipCharacter(cell, charList, step = 0, instant = false, flapDuration = FLAP_DURATION) {
+    function flipCharacter(cell, charList, step = 0, instant = false, duration = FLAP_DURATION) {
       const inner = cell.querySelector(".flap-inner");
       if (step >= charList.length) return;
       inner.classList.remove("flipping");
       void inner.offsetWidth;
       inner.textContent = charList[step];
       if (!instant) inner.classList.add("flipping");
-      setTimeout(() => {
-        flipCharacter(cell, charList, step + 1, instant, flapDuration);
-      }, flapDuration / charList.length);
+      setTimeout(() => flipCharacter(cell, charList, step + 1, instant, duration), duration / charList.length);
     }
 
-    function cycleCharacters(cell, targetChar, instant = false, flapDuration = FLAP_DURATION, stepList = null, delay = 0) {
+    function cycleCharacters(cell, targetChar, instant = false, duration = FLAP_DURATION, stepList = null, delay = 0) {
       const steps = stepList || [targetChar];
-      setTimeout(() => {
-        flipCharacter(cell, steps, 0, instant, flapDuration);
-      }, delay);
+      setTimeout(() => flipCharacter(cell, steps, 0, instant, duration), delay);
     }
 
-    function updateLineSmart(container, text, lastText, instantCharIndices = [], fastAnimIndices = [], staggered = false, forceDigits = []) {
+    function updateLineSmart(container, text, lastText, instantIndices = [], fastIndices = [], stagger = false) {
       const newChars = text.split("");
       while (container.children.length < newChars.length) {
         container.appendChild(createCell(" "));
@@ -158,22 +161,23 @@
       newChars.forEach((char, i) => {
         const cell = container.children[i];
         const inner = cell.querySelector(".flap-inner");
+        const instant = instantIndices.includes(i);
+        const delay = stagger ? i * STAGGER_DELAY : 0;
         if (!lastText[i] || lastText[i] !== char) {
-          const instant = instantCharIndices.includes(i);
-          const delay = staggered ? i * STAGGER_DELAY : 0;
           cycleCharacters(cell, char, instant, FLAP_FAST, null, delay);
         } else {
           inner.textContent = char;
         }
-        if (char === " ") {
-          cell.classList.add("empty");
-        } else {
-          cell.classList.remove("empty");
-        }
+        cell.classList.toggle("empty", char === " ");
       });
     }
 
-    let lastDateStr = "", lastTimeStr = [], lastWordStr = [];
+    function updateLine(container, text) {
+      container.innerHTML = "";
+      text.split("").forEach(char => container.appendChild(createCell(char === " " ? "\u00A0" : char)));
+    }
+
+    let lastDateStr = "", lastTimeStr = [], lastWordStr = [], currentIndex = 0;
 
     function updateDateTime() {
       const now = new Date();
@@ -187,19 +191,11 @@
       lastTimeStr = timeStr.split("");
     }
 
-    let currentIndex = 0;
     function updateWord() {
       const word = words[currentIndex];
       updateLineSmart(wordLine, word, lastWordStr, [], [], true);
       lastWordStr = word.split("");
       currentIndex = (currentIndex + 1) % words.length;
-    }
-
-    function updateLine(container, text) {
-      while (container.firstChild) container.removeChild(container.firstChild);
-      for (const char of text) {
-        container.appendChild(createCell(char === " " ? "\u00A0" : char));
-      }
     }
 
     updateLine(hanseaticLine, "Hanseatic");
